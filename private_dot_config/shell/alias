@@ -11,6 +11,7 @@ alias bathelp='bat --plain --language=help --no-pager'
 
 
 # A nicer file exploration ecosystem
+alias l='eza --color=auto --group-directories-first'
 alias ls='eza -a --color=auto --group-directories-first'
 alias l.='eza -la --recurse --level=2 --color=auto --group-directories-first'
 alias lss='eza -a --color=auto'
