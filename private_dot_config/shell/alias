@@ -1,0 +1,28 @@
+# Aliases to include regardless of which shell I'm using
+
+alias c='clear'
+alias grep='grep --color=auto'
+
+
+# Don't leave the bat-cave without the bat-utility-belt
+alias cat='bat --no-pager --plain'
+alias man='batman'
+alias bathelp='bat --plain --language=help --no-pager'
+
+
+# A nicer file exploration ecosystem
+alias ls='eza -a --color=auto --group-directories-first'
+alias l.='eza -la --recurse --level=2 --color=auto --group-directories-first'
+alias lss='eza -a --color=auto'
+alias lls='eza -la --smart-group --color=auto --group-directories-first'
+alias llst='eza -la --smart-group --color=auto --group-directories-first --total-size'
+alias llss='eza -la --smart-group --color=auto'
+alias llx='eza --color=auto --color-scale -lah -goZ -HM -muU'
+
+
+alias systemd-show-enabled='systemctl list-unit-files --state=enabled --no-pager'
+alias systemd-show-all='systemctl list-unit-files --no-pager'
+alias journalctl-errors='journalctl -p 3 --no-pager'
+
+
+alias my-kde='/usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland'
