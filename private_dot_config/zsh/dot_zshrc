@@ -1,0 +1,151 @@
+# Do nothing if this is not an interactive shell
+[[ $- != *i* ]] && return
+
+## Some resources that helped me put this together:
+# - ChatGPT and copilot
+# - https://olets.dev/posts/my-zshrc-zsh-configuration-annotated/
+# - https://github.com/BreadOnPenguins/dots/tree/master
+
+#===============================
+#	Source other files
+#===============================
+
+# Manually define XDG Base Directory Specification for portability
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_STATE_HOME="$HOME/.local/state"
+
+[ -f "$XDG_CONFIG_HOME/shell/alias" ] && source "$XDG_CONFIG_HOME/shell/alias"
+[ -f "$XDG_CONFIG_HOME/shell/vars" ] && source "$XDG_CONFIG_HOME/shell/vars"
+
+#===============================
+#	Command History
+#===============================
+
+HISTFILE="$XDG_STATE_HOME/zsh/history"
+HISTSIZE=10000
+SAVEHIST=10000
+
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_dups
+setopt hist_ignore_space
+
+# Create histfile dir if it does not exist
+[[ -d "${HISTFILE:h}" ]] || mkdir -p "${HISTFILE:h}"
+
+#===============================
+#	Autocompletions
+#===============================
+
+# See https://zsh.sourceforge.io/Doc/Release/Completion-System.html for more info on zsh's powerful completion system.
+
+# load modules
+zmodload zsh/complist
+autoload -U compinit 
+compinit -d "$XDG_CACHE_HOME/zsh/zcompdump"
+autoload -U colors 
+colors
+# autoload -U tetris # main attraction of zsh, obviously
+
+# cmp opts
+zstyle ':completion:*' menu select # tab opens cmp menu
+zstyle ':completion:*' special-dirs true # force . and .. to show in cmp menu
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} ma=0\;33 # colorize cmp menu
+zstyle ':completion:*' file-list true # more detailed list
+zstyle ':completion:*' squeeze-slashes false # explicit disable to allow /*/ expansion
+
+
+#===============================
+#	Keybindings and general behavior
+#===============================
+bindkey -e # use emacs mode
+
+# Fix some annoyances
+bindkey '^[[3~' delete-char         # Delete key deletes
+bindkey '\e[H' beginning-of-line    # Home key homes
+bindkey '\e[F' end-of-line          # End key ends
+setopt interactivecomments          # allow comments in terminal
+unsetopt list_beep                  # don't beep for ambiguous completions
+
+# Psuedo vim mode
+bindkey '^J' backward-char
+bindkey '^K' forward-char
+
+
+#===============================
+#	Yazi Integration
+#===============================
+
+function y() {
+# When opening yazi with function "y", will automatically change directory of terminal when exiting.
+# Use capital "Q" to exit and suppress this behavior.
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	command yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
+	rm -f -- "$tmp"
+}
+
+
+#===============================
+#	Prompt Customization
+#===============================
+
+# See https://zsh.sourceforge.io/Doc/Release/Prompt-Expansion.html for more info on prompt formatting.
+# %F{color} and %K{color} set foreground and background colors, respectively. %f and %k reset them.
+# %T - time in 24-hour format
+# %n - username
+# %~ - current directory, with ~ for home
+
+# Time, username, current directory and ❯ symbol.
+# TODO: move color definitions to theming file and use variables here
+# TODO: Trim down the prompt when not in ssh eg. if [[ -n "$SSH_CONNECTION" ]];
+# setopt PROMPT_SUBST # allow command substitution in prompt
+
+# Define a palette
+typeset -A NORD
+NORD=(
+    [fg]="#E5E9F0"
+    [bg1]="#2E3440"
+    [bg2]="#3B4252"
+    [bg3]="#4C566A"
+    [ssh]="#5e81ac"
+)
+
+# Clone the array into THEME, for easy switching later.
+typeset -A THEME
+THEME=("${(kv)NORD[@]}")
+
+
+# Build the Prompt
+
+NEWLINE=$'\n'
+PROMPT="${NEWLINE}"
+
+# If SSH: hostname, bold with highlight
+if [[ -n "$SSH_CONNECTION" ]]; then
+	PROMPT+="%K{${THEME[ssh]}}%F{${THEME[fg]}} %B%m%b "
+fi
+
+# Current time
+PROMPT+="%K{${THEME[bg1]}}%F{${THEME[fg]}} %T "
+# Current user
+PROMPT+="%K{${THEME[bg2]}}%F{${THEME[fg]}} %n "
+# Current directory
+PROMPT+="%K{${THEME[bg3]}}%F{${THEME[fg]}} %~ "
+# Clear colors to prevent bleeding into rest of shell
+PROMPT+="%f%k"
+# Fancy character
+PROMPT+=" ❯ "
+
+
+#===============================
+#	zoxide / fzf integration
+#===============================
+# Registers the command `z` and `zi` as a fancy replacement for cd.
+eval "$(zoxide init zsh)"
+
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)

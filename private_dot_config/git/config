@@ -1,0 +1,18 @@
+[user]
+    name = MrEnigmaamgine
+    email = mayes.joshua.d@gmail.com 
+
+[core]
+    editor = vim
+	autocrlf = input
+
+[init]
+    defaultBranch = main
+
+[color]
+    status = auto
+    branch = auto
+    interactive = auto
+    diff = auto
+[alias]
+	cm = commit -m
