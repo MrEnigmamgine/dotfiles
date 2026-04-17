@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -e
+############################################
+## A small utility script to manage mounting
+## and unmounting my rclone remotes.
+############################################
+
+## --- Functions ---
+rmount() {
+    ## Mount the remote in ~/mnt with the same name as the remote.
+    local MOUNT_DIR="${HOME}/mnt/${1}"
+    local REMOTE="$1"
+
+    # Mount remote using rclone
+    mkdir -p $MOUNT_DIR
+    rclone mount $REMOTE:/ $MOUNT_DIR \
+        --vfs-cache-mode full \
+        --daemon \
+        --log-file="${HOME}/.rclone_${1}.log" \
+        --log-format=pid \
+        --verbose
+}
+
+urmount() {
+    ## Unmount it gently.
+    local MOUNT_DIR="${HOME}/mnt/${1}"
+    fusermount -u $MOUNT_DIR
+}
+
+furmount() {
+    ## Unmount it firmly.
+    local MOUNT_DIR="${HOME}/mnt/${1}"
+    fusermount -uz $MOUNT_DIR
+}
+
+## --- Argument Parsing ---
+
+ARGS=()
+# While number of arguments > 0
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -u)
+            UNMOUNT=1   #True
+            shift 1     #Shift the args register
+            ;;
+        -fu | -uf)
+            UNMOUNT=1
+            FORCE=1
+            shift 1
+            ;;
+        *)
+            ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+## --- Logic ---
+
+if [[ "${UNMOUNT:-0}" -eq 1 ]]; then
+    if [[ "${FORCE:-0}" -eq 1 ]]; then
+        furmount "${ARGS[0]}"
+    else
+        urmount "${ARGS[0]}"
+    fi
+else
+    rmount "${ARGS[0]}"
+fi
