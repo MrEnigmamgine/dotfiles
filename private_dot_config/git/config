@@ -16,3 +16,5 @@
     diff = auto
 [alias]
 	cm = commit -m
+[url "git@github.com:"]
+	insteadOf = https://github.com/
