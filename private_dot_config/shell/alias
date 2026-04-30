@@ -27,3 +27,5 @@ alias journalctl-errors='journalctl -p 3 --no-pager'
 
 
 alias my-kde='/usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland'
+
+alias cz='chezmoi'
